@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import "./ProductList.css";
 import CartItem from "./CartItem";
 import { addItem } from "./CartSlice";
 
 function ProductList({ onHomeClick }) {
   const [showCart, setShowCart] = useState(false);
-    const [showPlants, setShowPlants] = useState(false);
-    const [addedToCard, setAddedToCart] = useState({});
-const dispatch = useDispatch();
+  const [showPlants, setShowPlants] = useState(false);
+  const [totalQuantity, setTotalQuantity] = useState(0);
+  const dispatch = useDispatch();
+
+
+
   const plantsArray = [
     {
       category: "Air Purifying Plants",
@@ -271,14 +274,12 @@ const dispatch = useDispatch();
     fontSize: "30px",
     textDecoration: "none",
   };
-    const handleAddToCart = (product) => {
-        
-      dispatch(addItem(product)); 
-      setAddedToCart((prevState) => ({
-        ...prevState, 
-        [product.name]: true, 
-      }));
-    };
+
+
+  const handleAddToCart = (product) => {
+    dispatch(addItem(product));
+
+  };
 
   const handleHomeClick = (e) => {
     e.preventDefault();
@@ -300,7 +301,18 @@ const dispatch = useDispatch();
     e.preventDefault();
     setShowCart(false);
   };
+  const CartItems = useSelector((state) => state.cart.items);
 
+  const calculateTotalQuantity = () => {
+    return CartItems
+      ? CartItems.reduce((total, item) => total + item.quantity, 0)
+      : 0;
+  };
+
+  useEffect(() => {
+    const quantity = calculateTotalQuantity();
+    setTotalQuantity(quantity);
+  }, [CartItems]);
 
   return (
     <div>
@@ -339,6 +351,7 @@ const dispatch = useDispatch();
                   <rect width="156" height="156" fill="none"></rect>
                   <circle cx="80" cy="216" r="12"></circle>
                   <circle cx="184" cy="216" r="12"></circle>
+
                   <path
                     d="M42.3,72H221.7l-26.4,92.4A15.9,15.9,0,0,1,179.9,176H84.1a15.9,15.9,0,0,1-15.4-11.6L32.5,37.8A8,8,0,0,0,24.8,32H8"
                     fill="none"
@@ -348,6 +361,7 @@ const dispatch = useDispatch();
                     stroke-width="2"
                     id="mainIconPathAttribute"></path>
                 </svg>
+                <span className="cart_quantity_count">{totalQuantity}</span>
               </h1>
             </a>
           </div>
@@ -376,9 +390,18 @@ const dispatch = useDispatch();
                     <div className="product-cost">${plant.cost}</div>
 
                     <button
-                      className="product-button"
-                      onClick={() => handleAddToCart(plant)}>
-                      Add to Cart
+                      className={`product-button ${
+                        CartItems.some((x) => x.name === plant.name)
+                          ? "added-to-cart"
+                          : ""
+                      }`}
+                      onClick={() => handleAddToCart(plant)}
+                      disabled={CartItems.some(
+                        (x) => x.name === plant.name
+                      )}>
+                      {CartItems.some((x) => x.name === plant.name)
+                        ? "Added to Cart"
+                        : "Add to Cart"}
                     </button>
                   </div>
                 ))}
